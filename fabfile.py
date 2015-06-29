@@ -4,7 +4,7 @@ from fabric.api import local, prompt, settings, env, roles, cd, run
 from fabric.contrib.console import confirm
 from fabric.contrib import files
 import getpass
-from os import path, getcwd, pardir
+from os import path, getcwd
 import shutil
 
 import deployutils.utils as utils
@@ -42,6 +42,20 @@ def _production_env():
     env.project_root = config.PROD_PROJECT_ROOT
     env.shell = '/bin/bash -c'
     env.python = '/usr/bin/python'
+
+
+@roles('production')
+def prod_push():
+    _production_env()
+    with cd(env.project_root):
+        if files.exists(path.join(env.project_root, '.git'),
+                        use_sudo=False,
+                        verbose=False):
+            run('git status')
+            prompt('Press <Enter> to continue or <Ctrl+C> to cancel.')
+            run('git add --all')
+            run('git commit -m "push from prod"')
+            run('git push origin master')
 
 
 @roles('production')
